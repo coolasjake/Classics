@@ -18,6 +18,8 @@ public class Game : MonoBehaviour {
 
 	public Canvas MainCanvas;
 	public GameObject Multiplayer;
+	public List<StartOptions> HelpButtons = new List<StartOptions> ();
+	public Text SetCounter;
 
 	public int PlaySize = 25;
 
@@ -28,6 +30,8 @@ public class Game : MonoBehaviour {
 		ScreenCenter = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width/2, Screen.height/2));
 		MainCanvas = FindObjectOfType<Canvas> ();
 		Multiplayer = MainCanvas.GetComponentInChildren<Submenu> ().gameObject;
+		HelpButtons.AddRange (MainCanvas.GetComponentsInChildren<StartOptions> ());
+		SetCounter = MainCanvas.GetComponentInChildren<PermanentMessage> ().GetComponent<Text>();
 
 		for (int i = 0; i < 4; ++i) {
 			PlayerScores [i] = 0;
@@ -81,7 +85,11 @@ public class Game : MonoBehaviour {
 						if (SelectedCards.Count >= 3) {
 							if (CheckSet (SelectedCards [0].GetComponent<Card>(), SelectedCards [1].GetComponent<Card>(), SelectedCards [2].GetComponent<Card>())) {
 								//Remove cards, replace them, and add a 'point'.
-								Debug.Log("Set!");
+								TemporaryMessage Message = Resources.Load<TemporaryMessage>("Prefabs/TempMessage");
+								Message = Instantiate (Message, MainCanvas.transform);
+								Message.SetText ("Set!");
+								Message.Delay = 0.5f;
+								//Debug.Log("Set!");
 								FoundSet = true;
 								if (CurrentTurn < 4) {
 									PlayerScores [CurrentTurn] += 1;
@@ -100,7 +108,7 @@ public class Game : MonoBehaviour {
 			}
 			if (FoundSet) {
 				RemoveAndReplaceSelected ();
-				Debug.Log(FindNumberOfSets () + " sets left.");
+				SetCounter.text = FindNumberOfSets () + " sets left.";
 			}
 			if (ChoseCard == false) {
 				foreach (GameObject aCard in SelectedCards)
@@ -110,23 +118,20 @@ public class Game : MonoBehaviour {
 		}
 	}
 
-	public void StartSingleplayer() {
-		if (GameHasStarted)
-			DrawNewCards ();
-		else {
-			GameHasStarted = true;
-			Multiplayer.SetActive(false);
-			MainCanvas.GetComponentsInChildren<StartButton> () [0].GetComponentInChildren<Text> ().text = "Redraw Cards";
-			MainCanvas.GetComponentsInChildren<StartButton> () [1].GetComponentInChildren<Text> ().text = "Redraw Cards";
-			foreach (Timer T in MainCanvas.GetComponentsInChildren<Timer>())
-				T.StartTimer();
-			foreach (GameObject aCard in SelectedCards)
-				aCard.transform.localScale = new Vector3 (1, 1, 1);
-			SelectedCards = new List<GameObject> ();
-			DrawNewCards ();
-			MainCanvas.GetComponentInChildren<StartButton> ().enabled = false;
-			CurrentTurn = 4;
-		}
+	public void SetPlaySize (int Size) {
+		PlaySize = Size;
+		DrawNewCards ();
+	}
+
+	public void PressStartButton1 () {
+		StartGame ();
+		Multiplayer.SetActive(true);
+	}
+
+	public void PressStartButton2 () {
+		StartGame ();
+		Multiplayer.SetActive(false);
+		CurrentTurn = 4;
 	}
 
 	public void StartGame() {
@@ -134,9 +139,13 @@ public class Game : MonoBehaviour {
 			DrawNewCards ();
 		else {
 			GameHasStarted = true;
-			Multiplayer.SetActive(true);
 			MainCanvas.GetComponentsInChildren<StartButton> () [0].GetComponentInChildren<Text> ().text = "Redraw Cards";
 			MainCanvas.GetComponentsInChildren<StartButton> () [1].GetComponentInChildren<Text> ().text = "Redraw Cards";
+			foreach (StartOptions SO in HelpButtons) {
+				SO.gameObject.SetActive (false);
+			}
+			foreach (TemporaryMessage T in FindObjectsOfType<TemporaryMessage> ())
+				DestroyImmediate (T.gameObject);
 			foreach (Timer T in MainCanvas.GetComponentsInChildren<Timer>())
 				T.StartTimer ();
 			foreach (GameObject aCard in SelectedCards)
@@ -150,11 +159,11 @@ public class Game : MonoBehaviour {
 	public void DrawNewCards() {
 		Deck.AddRange (Play);
 		Play = new List<GameObject> ();
-		//Shuffle<GameObject> (Deck);
-		Play = Deck.GetRange (0, PlaySize);
-		Deck.RemoveRange (0, PlaySize);
+		Shuffle<GameObject> (Deck);
+		Play = Deck.GetRange (0, Mathf.Clamp(PlaySize, 0, Deck.Count));
+		Deck.RemoveRange (0, Mathf.Clamp(PlaySize, 0, Deck.Count));
 		ArrangePlay ();
-		Debug.Log (FindNumberOfSets ());
+		SetCounter.text = FindNumberOfSets () + " sets left.";
 	}
 
 	public void RemoveAndReplaceSelected() {
@@ -182,6 +191,13 @@ public class Game : MonoBehaviour {
 				Sets = new List<GameObject> ();
 				MainCanvas.GetComponentsInChildren<StartButton> () [0].GetComponentInChildren<Text> ().text = "Start Game";
 				MainCanvas.GetComponentsInChildren<StartButton> () [1].GetComponentInChildren<Text> ().text = "Start Singleplayer";
+				TemporaryMessage Message = Resources.Load<TemporaryMessage>("Prefabs/TempMessage");
+				Message = Instantiate (Message, MainCanvas.transform);
+				Message.SetText ("All Sets Found!");
+				Message.Delay = 1f;
+				foreach (StartOptions SO in HelpButtons) {
+					SO.gameObject.SetActive (true);
+				}
 				if (CurrentTurn != 4)
 					MultiplayerGameFinished ();
 				else {
@@ -220,7 +236,7 @@ public class Game : MonoBehaviour {
 	public void ArrangePlay () {
 		float Size = Mathf.Ceil (Mathf.Sqrt (Play.Count));
 		Vector2 Offset = new Vector2(ScreenCenter.x - Size + 1, ScreenCenter.y - Size/2 + 0.5f);
-		Instantiate (new GameObject (), Offset, new Quaternion());
+		//Instantiate (new GameObject (), Offset, new Quaternion());
 		int i = 0;
 		foreach (GameObject C in Play) {
 			C.GetComponent<Card>().TargetPos = new Vector3 (Offset.x + Mathf.Floor (i / Size) * 2, Offset.y + (i % Size) * 1, 1);
@@ -281,6 +297,38 @@ public class Game : MonoBehaviour {
 				}
 			}
 		}
+	}
+
+	public void Tutorial () {
+		foreach (TemporaryMessage T in FindObjectsOfType<TemporaryMessage> ())
+			DestroyImmediate (T.gameObject);
+		TemporaryMessage Message = Resources.Load<TemporaryMessage> ("Prefabs/TempMessage");
+		var Temp = Instantiate (Message, MainCanvas.transform);
+		Temp.SetText ("A set has either ALL THE SAME or ALL DIFFERENT for each of its 4 attributes: Shape, Colour, Fill and Number.");
+		Temp = Instantiate (Message, MainCanvas.transform);
+		Temp.SetText ("This is a Set");
+		Temp.GetComponent<RectTransform> ().anchorMax = new Vector2 (0.5f, 0);
+		Temp.GetComponent<RectTransform> ().anchorMin = new Vector2 (0.5f, 0);
+		Temp.transform.Translate(0, 160, 0);
+		Deck.AddRange (Play);
+		Play = new List<GameObject> ();
+		int i; 
+		i = Random.Range (0, Deck.Count);
+		Play.Add(Deck[i]);
+		Deck.RemoveAt (i);
+		i = Random.Range (0, Deck.Count);
+		Play.Add(Deck[i]);
+		Deck.RemoveAt (i);
+
+		foreach (GameObject C in Deck) {
+			if (CheckSet (C.GetComponent<Card> (), Play [0].GetComponent<Card> (), Play [1].GetComponent<Card> ())) {
+				Play.Add (C);
+				Deck.Remove (C);
+				break;
+			}
+		}
+
+		ArrangePlay ();
 	}
 
 	public int FindNumberOfSets() {

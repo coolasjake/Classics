@@ -9,7 +9,7 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{51701F92-E90E-27DA-5E95-A89430A3C83A}</ProjectGuid>
+    <ProjectGuid>{1E8CB3D1-25CA-F882-EA1B-EB07C44BA470}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>Assembly-CSharp</AssemblyName>
@@ -54,9 +54,11 @@
      <Compile Include="Assets\Scripts\Card.cs" />
      <Compile Include="Assets\Scripts\Game.cs" />
      <Compile Include="Assets\Scripts\Instructions.cs" />
+     <Compile Include="Assets\Scripts\PermanentMessage.cs" />
      <Compile Include="Assets\Scripts\StartButton.cs" />
-     <Compile Include="Assets\Scripts\StartHelp.cs" />
+     <Compile Include="Assets\Scripts\StartOptions.cs" />
      <Compile Include="Assets\Scripts\Submenu.cs" />
+     <Compile Include="Assets\Scripts\TemporaryMessage.cs" />
      <Compile Include="Assets\Scripts\Timer.cs" />
  <Reference Include="UnityEngine.UI">
  <HintPath>C:/Program Files/Unity 2017/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
