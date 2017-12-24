@@ -14,8 +14,10 @@ public class Game : MonoBehaviour {
 	public int Timer = 0;
 	public int TurnTime = 300;
 	public int CurrentTurn = -1;
+	public bool GameHasStarted = false;
 
 	public Canvas MainCanvas;
+	public GameObject Multiplayer;
 
 	public int PlaySize = 25;
 
@@ -25,6 +27,7 @@ public class Game : MonoBehaviour {
 	void Start () {
 		ScreenCenter = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width/2, Screen.height/2));
 		MainCanvas = FindObjectOfType<Canvas> ();
+		Multiplayer = MainCanvas.GetComponentInChildren<Submenu> ().gameObject;
 
 		for (int i = 0; i < 4; ++i) {
 			PlayerScores [i] = 0;
@@ -41,10 +44,12 @@ public class Game : MonoBehaviour {
 			NewCard.GetComponent<Card> ().SetDesign (i);
 			Deck.Add (NewCard);
 		}
+
+		Multiplayer.SetActive (false);
 	}
 
 	void FixedUpdate () {
-		if (CurrentTurn != -1) {
+		if (CurrentTurn != -1 && CurrentTurn != 4) {
 			if (Timer < TurnTime)
 				Timer += 1;
 			else if (Timer >= TurnTime)
@@ -78,9 +83,11 @@ public class Game : MonoBehaviour {
 								//Remove cards, replace them, and add a 'point'.
 								Debug.Log("Set!");
 								FoundSet = true;
-								PlayerScores [CurrentTurn] += 1;
-								MainCanvas.GetComponentsInChildren<Text> () [CurrentTurn].text = "" + PlayerScores [CurrentTurn];						Timer = 0;
-								TurnEnded (CurrentTurn + 1, false);
+								if (CurrentTurn < 4) {
+									PlayerScores [CurrentTurn] += 1;
+									MainCanvas.GetComponentsInChildren<Text> () [CurrentTurn].text = "" + PlayerScores [CurrentTurn];
+									TurnEnded (CurrentTurn + 1, false);
+								}
 							} else {
 								//Deselect all cards, give a warning ("Not a set") or lose a point.
 								foreach (GameObject aCard in SelectedCards)
@@ -103,20 +110,47 @@ public class Game : MonoBehaviour {
 		}
 	}
 
+	public void StartSingleplayer() {
+		if (GameHasStarted)
+			DrawNewCards ();
+		else {
+			GameHasStarted = true;
+			Multiplayer.SetActive(false);
+			MainCanvas.GetComponentsInChildren<StartButton> () [0].GetComponentInChildren<Text> ().text = "Redraw Cards";
+			MainCanvas.GetComponentsInChildren<StartButton> () [1].GetComponentInChildren<Text> ().text = "Redraw Cards";
+			foreach (Timer T in MainCanvas.GetComponentsInChildren<Timer>())
+				T.StartTimer();
+			foreach (GameObject aCard in SelectedCards)
+				aCard.transform.localScale = new Vector3 (1, 1, 1);
+			SelectedCards = new List<GameObject> ();
+			DrawNewCards ();
+			MainCanvas.GetComponentInChildren<StartButton> ().enabled = false;
+			CurrentTurn = 4;
+		}
+	}
+
 	public void StartGame() {
-		foreach (Timer T in MainCanvas.GetComponentsInChildren<Timer>())
-			T.StartTimer();
-		foreach (GameObject aCard in SelectedCards)
-			aCard.transform.localScale = new Vector3 (1, 1, 1);
-		SelectedCards = new List<GameObject> ();
-		DrawNewCards ();
-		MainCanvas.GetComponentInChildren<StartButton> ().enabled = false;
+		if (GameHasStarted)
+			DrawNewCards ();
+		else {
+			GameHasStarted = true;
+			Multiplayer.SetActive(true);
+			MainCanvas.GetComponentsInChildren<StartButton> () [0].GetComponentInChildren<Text> ().text = "Redraw Cards";
+			MainCanvas.GetComponentsInChildren<StartButton> () [1].GetComponentInChildren<Text> ().text = "Redraw Cards";
+			foreach (Timer T in MainCanvas.GetComponentsInChildren<Timer>())
+				T.StartTimer ();
+			foreach (GameObject aCard in SelectedCards)
+				aCard.transform.localScale = new Vector3 (1, 1, 1);
+			SelectedCards = new List<GameObject> ();
+			DrawNewCards ();
+			MainCanvas.GetComponentInChildren<StartButton> ().enabled = false;
+		}
 	}
 
 	public void DrawNewCards() {
 		Deck.AddRange (Play);
 		Play = new List<GameObject> ();
-		Shuffle<GameObject> (Deck);
+		//Shuffle<GameObject> (Deck);
 		Play = Deck.GetRange (0, PlaySize);
 		Deck.RemoveRange (0, PlaySize);
 		ArrangePlay ();
@@ -143,7 +177,17 @@ public class Game : MonoBehaviour {
 
 		if (Deck.Count == 0) {
 			if (FindNumberOfSets () == 0) {
-				MultiplayerGameFinished ();
+				GameHasStarted = false;
+				Deck.AddRange (Sets);
+				Sets = new List<GameObject> ();
+				MainCanvas.GetComponentsInChildren<StartButton> () [0].GetComponentInChildren<Text> ().text = "Start Game";
+				MainCanvas.GetComponentsInChildren<StartButton> () [1].GetComponentInChildren<Text> ().text = "Start Singleplayer";
+				if (CurrentTurn != 4)
+					MultiplayerGameFinished ();
+				else {
+					//Restore buttons etc.
+					StopTimers();
+				}
 			}
 		}
 	}
@@ -165,10 +209,12 @@ public class Game : MonoBehaviour {
 				MainCanvas.GetComponentsInChildren<Text> () [i].text = "At least you're not a nerd.";
 		}
 
+		StopTimers ();
+	}
+
+	public void StopTimers () {
 		foreach (Timer T in MainCanvas.GetComponentsInChildren<Timer>())
 			T.StopTimer ();
-
-
 	}
 
 	public void ArrangePlay () {
