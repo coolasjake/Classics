@@ -51,15 +51,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Scripts\Card.cs" />
-     <Compile Include="Assets\Scripts\Game.cs" />
-     <Compile Include="Assets\Scripts\Instructions.cs" />
-     <Compile Include="Assets\Scripts\PermanentMessage.cs" />
-     <Compile Include="Assets\Scripts\StartButton.cs" />
-     <Compile Include="Assets\Scripts\StartOptions.cs" />
-     <Compile Include="Assets\Scripts\Submenu.cs" />
-     <Compile Include="Assets\Scripts\TemporaryMessage.cs" />
-     <Compile Include="Assets\Scripts\Timer.cs" />
+     <Compile Include="Assets\Scripts\Cluedo\CluedoGame.cs" />
+     <Compile Include="Assets\Scripts\Cluedo\GuessCard.cs" />
+     <Compile Include="Assets\Scripts\Generic\Notes.cs" />
+     <Compile Include="Assets\Scripts\Generic\PermanentMessage.cs" />
+     <Compile Include="Assets\Scripts\Generic\StartButton.cs" />
+     <Compile Include="Assets\Scripts\Generic\StartOptions.cs" />
+     <Compile Include="Assets\Scripts\Generic\Submenu.cs" />
+     <Compile Include="Assets\Scripts\Generic\TemporaryMessage.cs" />
+     <Compile Include="Assets\Scripts\Generic\Timer.cs" />
+     <Compile Include="Assets\Scripts\Mastermind\MastermindGame.cs" />
+     <Compile Include="Assets\Scripts\Set\Card.cs" />
+     <Compile Include="Assets\Scripts\Set\Game.cs" />
+     <Compile Include="Assets\Scripts\Set\Instructions.cs" />
  <Reference Include="UnityEngine.UI">
  <HintPath>C:/Program Files/Unity 2017/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>
